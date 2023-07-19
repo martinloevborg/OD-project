@@ -1,0 +1,44 @@
+version: '3.5'
+networks:
+    network1:
+    network2:
+services: 
+    proxy:
+        image: nginx #latest
+        ports:
+            - "443:443"
+            - "80:80"
+        depends_on:
+            - backend
+        networks:
+            - network1
+        volumes:
+          - ./html:/etc/nginx/html
+          - ./etc/nginx/ssl:/etc/nginx/ssl #/
+          - ./proxy/default.conf:/etc/nginx/conf.d/default.conf 
+    backend:
+        build: ./backend/
+        container_name: backend
+        #expose: 
+            #- "5000"
+        restart: always
+        depends_on:
+            - database
+        networks:
+            - network1
+            - network2
+        environment:
+            - FLASK_APP=/server.py
+        command: flask run --host=0.0.0.0
+    database:
+        build: ./database/
+        #expose:
+            #- "3306"
+        restart: always
+        environment:
+            MYSQL_USER: 'user'
+            MYSQL_PASSWORD: 'password'
+            MYSQL_ROOT_PASSWORD: 'password'
+            MYSQL_DATABASE: 'pDatabase'
+        networks:
+            - network2
